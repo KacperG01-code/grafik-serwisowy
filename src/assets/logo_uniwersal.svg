@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Tło ciemne -->
+  <rect width="512" height="512" fill="#121212"/>
+  
+  <defs>
+    <!-- Gradient niebieski -> zielony dla kuli -->
+    <linearGradient id="coolGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#009FE3"/>
+      <stop offset="50%" stop-color="#00A78E"/>
+      <stop offset="100%" stop-color="#7AC142"/>
+    </linearGradient>
+    
+    <!-- Maskowanie kuli z falami -->
+    <mask id="globeMask">
+      <circle cx="256" cy="220" r="140" fill="white"/>
+      <!-- Paski wycinające fale -->
+      <path d="M 100 200 Q 256 240 412 200" stroke="black" stroke-width="12" fill="none"/>
+      <path d="M 100 250 Q 256 290 412 250" stroke="black" stroke-width="12" fill="none"/>
+    </mask>
+  </defs>
+
+  <!-- Kula z logo -->
+  <circle cx="256" cy="220" r="140" fill="url(#coolGradient)" mask="url(#globeMask)"/>
+  
+  <!-- Napis pod spodem -->
+  <text x="256" y="410" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="32" fill="#009FE3" text-anchor="middle" letter-spacing="2">CO2OL</text>
+  <text x="256" y="445" font-family="'Segoe UI', sans-serif" font-size="18" fill="#00A78E" text-anchor="middle" letter-spacing="8">TECHNIK</text>
+</svg>

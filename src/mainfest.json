@@ -1,0 +1,25 @@
+{
+    "name": "Grafik COOL",
+    "short_name": "Grafik",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#121212",
+    "theme_color": "#009fe3",
+    "icons": [
+        {
+            "src": "assets/logo_male.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "assets/logo_duze.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "assets/logo_uniwersalsvg",
+            "sizes": "any",
+            "type": "image/svg+xml"
+        }
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "name": "grafik-serwisowy",
+    "version": "1.0.0",
+    "description": "Aplikacja do zarządzania grafikiem i rozliczeniami",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron ."
+    },
+    "dependencies": {
+        "exceljs": "^4.3.0"
+    },
+    "devDependencies": {
+        "electron": "^28.0.0"
+    }
+}
