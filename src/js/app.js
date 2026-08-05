@@ -3,21 +3,24 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
 
-const STORAGE_KEY = 'grafikiUsera_v2';
+let globalShifts = []; // Przechowuje aktualne dyżury pobrane z chmury (potrzebne do Excela)
 
-// Główna funkcja renderująca listę dyżurów
-function renderShifts() {
+// Nasłuchiwanie zmian w bazie danych (REAL-TIME SYNCHRONIZACJA)
+db.collection('shifts').orderBy('start', 'desc').onSnapshot((snapshot) => {
   const shiftsList = document.getElementById('shiftsList');
-  const shifts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  
   shiftsList.innerHTML = '';
+  globalShifts = []; // Czyścimy listę przed nowym pobraniem
 
-  if (shifts.length === 0) {
-    shiftsList.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">Brak zapisanego grafiku.</p>';
+  if (snapshot.empty) {
+    shiftsList.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">Brak zapisanego grafiku w chmurze.</p>';
     return;
   }
 
-  shifts.forEach((shift, index) => {
+  snapshot.forEach(doc => {
+    const shift = doc.data();
+    const docId = doc.id; // Unikalne ID dokumentu z Firebase (zamiast starego indexu)
+    globalShifts.push(shift); // Dodajemy do tablicy dla przycisku Excel
+
     const card = document.createElement('div');
     card.style.cssText = 'background: #1e1e1e; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #007acc; position: relative;';
     
@@ -29,6 +32,7 @@ function renderShifts() {
     const startDate = shift.start ? shift.start.replace('T', ' ') : '';
     const endDate = shift.end ? shift.end.replace('T', ' ') : '';
 
+    // Zwróć uwagę, że w deleteShift przekazujemy teraz string: '${docId}'
     card.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div>
@@ -40,24 +44,24 @@ function renderShifts() {
         <div style="text-align: right;">
           <span style="color: #4CAF50; font-size: 18px; font-weight: bold;">${totalPay.toFixed(2)} zł</span>
           <br>
-          <button onclick="deleteShift(${index})" style="background: #d9534f; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-size: 12px; font-weight: bold;">Usuń</button>
+          <button onclick="deleteShift('${docId}')" style="background: #d9534f; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-size: 12px; font-weight: bold;">Usuń</button>
         </div>
       </div>
     `;
     
     shiftsList.appendChild(card);
   });
+});
+
+// Globalna funkcja usuwająca dyżur bezpośrednio z chmury Firebase
+window.deleteShift = function(docId) {
+  db.collection('shifts').doc(docId).delete().catch(error => {
+    console.error("Błąd przy usuwaniu z bazy:", error);
+  });
+  // Nie musimy wywoływać renderShifts(), bo onSnapshot samo wykryje usunięcie!
 }
 
-// Globalna funkcja usuwająca dyżur po indeksie
-window.deleteShift = function(index) {
-  let shifts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  shifts.splice(index, 1);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(shifts));
-  renderShifts();
-}
-
-// Dodawanie wpisu
+// Dodawanie wpisu i wysyłanie go do chmury
 document.getElementById('addShiftBtn').addEventListener('click', () => {
   const proj = document.getElementById('projectSelect').value;
   const start = document.getElementById('timeStart').value;
@@ -81,28 +85,23 @@ document.getElementById('addShiftBtn').addEventListener('click', () => {
     calc: calcResults
   };
 
-  let shifts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  shifts.push(newShift);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(shifts));
-  
-  document.getElementById('timeStart').value = '';
-  document.getElementById('timeEnd').value = '';
-  document.getElementById('isHoliday').checked = false;
-
-  renderShifts();
+  // Wysyłamy dane do chmury Firestore zamiast localStorage
+  db.collection('shifts').add(newShift).then(() => {
+    // Po udanym zapisie czyścimy formularz
+    document.getElementById('timeStart').value = '';
+    document.getElementById('timeEnd').value = '';
+    document.getElementById('isHoliday').checked = false;
+  }).catch(error => {
+    console.error("Błąd podczas dodawania wpisu do bazy:", error);
+    alert("Błąd połączenia z bazą chmurową!");
+  });
 });
 
-// Zapisz do Excela
+// Zapisz do Excela (bierze dane prosto z pobranej z chmury tablicy globalShifts)
 document.getElementById('exportBtn').addEventListener('click', () => {
-  const shifts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  if (shifts.length === 0) {
+  if (globalShifts.length === 0) {
     alert("Brak danych do wygenerowania raportu.");
     return;
   }
-  generateExcel(shifts);
+  generateExcel(globalShifts);
 });
-
-
-
-// Renderuj przy starcie
-renderShifts();
