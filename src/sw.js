@@ -1,5 +1,5 @@
 self.addEventListener('install', (e) => {
-    e.waitUntill(
+    e.waitUntil(
         caches.open('grafik-store').then((cache) => cache.addAll([
             './index.html',
             './css/style.css',
