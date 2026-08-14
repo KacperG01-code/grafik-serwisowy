@@ -45,15 +45,22 @@ const loginError = document.getElementById('loginError');
 loginBtn.addEventListener('click', () => {
   const email = loginEmail.value;
   const pass = loginPassword.value;
+
+  if (!email || !pass) {
+    alert("Wpisz e-mail i hasło!");
+    return;
+  }
   
   firebase.auth().signInWithEmailAndPassword(email, pass)
     .then((userCredential) => {
       // Sukces - ukrywamy błąd (okienko schowa się samo w onAuthStateChanged)
+      alert("Zalogowano pomyslnie!");
       loginError.style.display = 'none';
       loginPassword.value = ''; // Czyścimy hasło dla bezpieczeństwa
     })
     .catch((error) => {
       // Błąd logowania (np. złe hasło)
+      alert("BŁĄD FIREBASE: " + error.code + " - " + error.message);
       loginError.style.display = 'block';
       console.error("Błąd logowania:", error.message);
     });
