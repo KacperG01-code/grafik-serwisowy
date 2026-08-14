@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grafik Serwisu</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+</head>
+<body>
+  <!-- EKRAN LOGOWANIA -->
+  <div id="loginOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #121212; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+    <h2 style="color: #007acc; margin-bottom: 20px;">Mój Grafik - Logowanie</h2>
+    <div style="background: #1e1e1e; padding: 30px; border-radius: 8px; text-align: center; width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+      <input type="email" id="loginEmail" placeholder="Adres e-mail" style="width: 100%; padding: 10px; margin-bottom: 15px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;">
+      <input type="password" id="loginPassword" placeholder="Hasło" style="width: 100%; padding: 10px; margin-bottom: 20px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;">
+      <button id="loginBtn" style="width: 100%; padding: 10px; background: #007acc; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px;">Zaloguj się</button>
+      <p id="loginError" style="color: #d9534f; margin-top: 15px; font-size: 14px; display: none;">Błędny e-mail lub hasło!</p>
+    </div>
+  </div>
+  <!-- Pasek górny -->
+  <header class="top-bar">
+    <h1>Mój Grafik</h1>
+    <button id="exportExcelBtn" class="btn btn-green">Pobierz Excel</button>
+    <button id="logoutBtn" class="logout-btn">Wyloguj się</button>
+  </header>
+
+  <!-- Główny kontener aplikacji -->
+  <div class="dashboard-container">
+    
+    <!-- LEWA KOLUMNA: Kalendarz i Podsumowanie -->
+    <div class="calendar-section">
+      <!-- Podsumowanie finansowe -->
+      <div class="summary-panel">
+        <div class="summary-box">
+          <p>Zarobki w miesiącu</p>
+          <h2 id="monthEarnings">0.00 zł</h2>
+        </div>
+        <div class="summary-box">
+          <p>Godziny (Razem)</p>
+          <h2 id="monthHours">0 h</h2>
+        </div>
+      </div>
+
+      <!-- Nawigacja kalendarza -->
+      <div class="calendar-header">
+        <button id="prevMonthBtn" class="btn-icon">&lt;</button>
+        <h2 id="currentMonthLabel">Sierpień 2026</h2>
+        <button id="nextMonthBtn" class="btn-icon">&gt;</button>
+      </div>
+
+      <!-- Siatka kalendarza (Dni wygeneruje JS) -->
+      <div id="calendarGrid" class="calendar-grid">
+        <!-- Tutaj wpadną nagłówki (Pn, Wt...) i kafelki z dniami -->
+      </div>
+    </div>
+
+    <!-- PRAWA KOLUMNA: Kafelki z dyżurami -->
+    <div class="shifts-section">
+      <h2>Dyżury: <span id="selectedMonthText">Sierpień 2026</span></h2>
+      <div id="shiftsList" class="schedule-container">
+        <!-- Tutaj JavaScript będzie generował kafelki dla wybranego miesiąca -->
+        <p class="empty-state">Brak dyżurów w tym miesiącu.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- OKIENKO MODAL (Ukryte domyślnie) -->
+  <div id="shiftModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Dodaj dyżur: 15 Sierpnia</h3>
+        <button id="closeModalBtn" class="btn-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label>Projekt:</label>
+        <select id="projectSelect">
+          <option value="COOL TECHNIK">COOL TECHNIK (Stawki Zmienne)</option>
+        </select>
+
+        <label>Rozpoczęcie:</label>
+        <input type="time" id="timeStart">
+        
+        <label>Zakończenie:</label>
+        <input type="time" id="timeEnd">
+
+        <div class="checkbox-container">
+          <input type="checkbox" id="isHoliday"> 
+          <label for="isHoliday">Zaznacz, jeśli to Święto</label>
+        </div>
+
+        <button id="saveShiftBtn" class="btn btn-blue w-100">Zapisz godziny</button>
+      </div>
+    </div>
+  </div>
+
+ <!-- Biblioteki Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<!-- Twój plik z konfiguracją Firebase -->
+<script src="js/firebase.js"></script>
+
+<!-- Twoje pozostałe skrypty -->
+<script src="js/calculator.js"></script>
+<script src="js/excel-gen.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
