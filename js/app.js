@@ -332,6 +332,47 @@ window.deleteShift = function(docId) {
   });
 };
 
+// POPRAWIONA SEKCJA PROJEKTÓW
+const showAddProjectBtn = document.getElementById('showAddProjectBtn');
+const newProjectContainer = document.getElementById('newProjectContainer');
+const newProjectInput = document.getElementById('newProjectInput');
+const saveProjectBtn = document.getElementById('saveProjectBtn');
+const projectSelect = document.getElementById('projectSelect'); // Upewnij się, że masz takie ID w HTML
+
+// Pobieranie i aktualizowanie listy projektów z bazy
+db.collection('projects').onSnapshot(snapshot => {
+  projectSelect.innerHTML = ''; // Czyścimy listę
+  snapshot.forEach(doc => {
+    const proj = doc.data();
+    const option = document.createElement('option');
+    option.value = proj.name;
+    option.innerText = proj.name;
+    projectSelect.appendChild(option);
+  });
+});
+
+showAddProjectBtn.addEventListener('click', () => {
+  newProjectContainer.style.display = (newProjectContainer.style.display === 'none') ? 'flex' : 'none';
+});
+
+saveProjectBtn.addEventListener('click', () => {
+  const projectName = newProjectInput.value.trim();
+  if (!projectName) {
+    alert("Wpisz nazwę projektu!");
+    return;
+  }
+
+  db.collection('projects').add({
+    name: projectName,
+    baseRate: 30, // Domyślna stawka, później zrobimy edycję
+    holidayRate: 60,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    newProjectInput.value = '';
+    newProjectContainer.style.display = 'none';
+  }).catch(err => console.error("Błąd zapisu:", err));
+});
+
 const exportBtn = document.getElementById('exportExcelBtn');
 if (exportBtn) {
   exportBtn.addEventListener('click', () => {
@@ -350,3 +391,5 @@ if (exportBtn) {
     generateExcel(filteredShifts);
   });
 }
+
+
