@@ -14,8 +14,6 @@ let availableProjects = []; // Tablica na projekty pobrane z bazy
 // Elementy interfejsu (Dashboard)
 const calendarGrid = document.getElementById('calendarGrid');
 const currentMonthLabel = document.getElementById('currentMonthLabel');
-const selectedMonthText = document.getElementById('selectedMonthText');
-const shiftsList = document.getElementById('shiftsList');
 const monthEarnings = document.getElementById('monthEarnings');
 const monthHours = document.getElementById('monthHours');
 const prevMonthBtn = document.getElementById('prevMonthBtn');
@@ -111,7 +109,6 @@ function updateDashboard() {
 
   const formattedMonth = `${monthNames[month]} ${year}`;
   currentMonthLabel.innerText = formattedMonth;
-  if (selectedMonthText) selectedMonthText.innerText = formattedMonth;
 
   renderCalendar(year, month);
 
@@ -121,12 +118,11 @@ function updateDashboard() {
     return shiftDate.getFullYear() === year && shiftDate.getMonth() === month;
   });
 
-  renderShiftsList(filteredShifts);
   updateSummary(filteredShifts);
 }
 
 /* =========================================================
-   3. GENEROWANIE KALENDARZA I KLIKANIE W DNI
+   3. GENEROWANIE KALENDARZA, KAFELKÓW I KLIKANIA W DNI
 ========================================================= */
 function renderCalendar(year, month) {
   calendarGrid.innerHTML = '';
@@ -135,6 +131,7 @@ function renderCalendar(year, month) {
   daysOfWeek.forEach(day => {
     const header = document.createElement('div');
     header.classList.add('calendar-day-header');
+    header.style.cssText = 'text-align: center; font-weight: bold; color: #888; padding: 5px 0;';
     header.innerText = day;
     calendarGrid.appendChild(header);
   });
@@ -151,18 +148,53 @@ function renderCalendar(year, month) {
   for (let i = 1; i <= daysInMonth; i++) {
     const dayDiv = document.createElement('div');
     dayDiv.classList.add('calendar-day');
-    dayDiv.innerHTML = `<strong>${i}</strong>`;
+    // Ustawiamy kafelki na wyższe i elastyczne
+    dayDiv.style.cssText = 'background: #1e1e1e; min-height: 100px; padding: 6px; border-radius: 6px; border: 1px solid #333; display: flex; flex-direction: column; cursor: pointer; position: relative; gap: 4px;';
 
-    const hasShift = allShifts.some(shift => {
+    // Znajdujemy wszystkie dyżury dla tego dnia
+    const dayShifts = allShifts.filter(shift => {
       if (!shift.start) return false;
       const d = new Date(shift.start);
       return d.getFullYear() === year && d.getMonth() === month && d.getDate() === i;
     });
 
-    if (hasShift) {
-      dayDiv.style.borderLeft = '3px solid #4CAF50';
+    // Numer dnia (prawa góra)
+    let htmlContent = `<div style="font-weight: bold; color: #fff; font-size: 14px; text-align: right; margin-bottom: 2px;">${i}</div>`;
+    
+    if (dayShifts.length > 0) {
+      dayDiv.style.borderColor = '#4CAF50';
     }
 
+    dayDiv.innerHTML = htmlContent;
+
+    // Generujemy blok dla każdego dyżuru w tym dniu
+    dayShifts.forEach(shift => {
+      const projectName = shift.project || 'Projekt';
+      const startTime = shift.start ? shift.start.split('T')[1] : '';
+      const endTime = shift.end ? shift.end.split('T')[1] : '';
+
+      const shiftBlock = document.createElement('div');
+      shiftBlock.style.cssText = 'background: rgba(76, 175, 80, 0.15); border-left: 3px solid #4CAF50; padding: 4px; border-radius: 4px; font-size: 11px; position: relative;';
+      
+      shiftBlock.innerHTML = `
+        <div style="color: #4CAF50; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 15px;">${projectName}</div>
+        <div style="color: #ccc; margin-top: 2px;">${startTime} - ${endTime}</div>
+        <button class="delete-btn" style="position: absolute; top: 2px; right: 2px; background: none; border: none; color: #d9534f; font-size: 14px; cursor: pointer; padding: 0 3px;">&times;</button>
+      `;
+
+      // Event usuwania podpięty tylko pod 'X' na kafelku
+      const deleteBtn = shiftBlock.querySelector('.delete-btn');
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Zatrzymuje kliknięcie przed otwarciem okna dodawania dyżuru
+        if(confirm("Czy na pewno usunąć ten dyżur?")) {
+          deleteShift(shift.docId);
+        }
+      });
+
+      dayDiv.appendChild(shiftBlock);
+    });
+
+    // KLIKNIĘCIE W DZIEŃ -> Otwiera okienko dodawania
     dayDiv.addEventListener('click', () => {
       const strYear = year;
       const strMonth = String(month + 1).padStart(2, '0');
@@ -244,44 +276,8 @@ saveShiftBtn.addEventListener('click', () => {
 });
 
 /* =========================================================
-   5. LISTA, PODSUMOWANIE I ZARZĄDZANIE PROJEKTAMI
+   5. PODSUMOWANIE, NAWIGACJA I ZARZĄDZANIE PROJEKTAMI
 ========================================================= */
-function renderShiftsList(shifts) {
-  shiftsList.innerHTML = '';
-
-  if (shifts.length === 0) {
-    shiftsList.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">Brak dyżurów w tym miesiącu.</p>';
-    return;
-  }
-
-  shifts.forEach(shift => {
-    const card = document.createElement('div');
-    card.style.cssText = 'background: #1e1e1e; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #007acc; position: relative;';
-    
-    const projectName = shift.project || 'Projekt';
-    const totalHours = shift.calc && shift.calc.hours ? shift.calc.hours.total : 0;
-    const totalPay = shift.calc && shift.calc.pay ? shift.calc.pay.total : 0;
-    const startDate = shift.start ? shift.start.replace('T', ' ') : '';
-    const endDate = shift.end ? shift.end.replace('T', ' ') : '';
-
-    card.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-        <div>
-          <strong style="color: #4CAF50; font-size: 16px;">${projectName}</strong>
-          <div style="color: #ccc; font-size: 14px; margin-top: 5px;">Od: ${startDate}</div>
-          <div style="color: #ccc; font-size: 14px;">Do: ${endDate}</div>
-          <div style="color: #aaa; font-size: 13px; margin-top: 5px;">Czas: ${totalHours}h</div>
-        </div>
-        <div style="text-align: right;">
-          <span style="color: #4CAF50; font-size: 18px; font-weight: bold;">${totalPay.toFixed(2)} zł</span>
-          <br>
-          <button onclick="deleteShift('${shift.docId}')" style="background: #d9534f; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-size: 12px; font-weight: bold;">Usuń</button>
-        </div>
-      </div>
-    `;
-    shiftsList.appendChild(card);
-  });
-}
 
 function updateSummary(shifts) {
   let totalEarnings = 0;
@@ -347,9 +343,15 @@ if (showAddProjectBtn && newProjectContainer) {
 if (saveProjectBtn) {
   saveProjectBtn.addEventListener('click', () => {
     const projectName = document.getElementById('newProjectName').value.trim();
-    const baseRate = parseFloat(document.getElementById('newProjectBase').value) || 31.40;
-    const nightRate = parseFloat(document.getElementById('newProjectNight').value) || 35.00;
-    const holidayRate = parseFloat(document.getElementById('newProjectHoliday').value) || 45.00;
+    
+    // Zabezpieczenie na wypadek wpisania przecinka z klawiatury telefonicznej
+    const baseStr = document.getElementById('newProjectBase').value.replace(',', '.');
+    const nightStr = document.getElementById('newProjectNight').value.replace(',', '.');
+    const holidayStr = document.getElementById('newProjectHoliday').value.replace(',', '.');
+
+    const baseRate = parseFloat(baseStr) || 31.40;
+    const nightRate = parseFloat(nightStr) || 35.00;
+    const holidayRate = parseFloat(holidayStr) || 45.00;
 
     if (!projectName) {
       alert("Wpisz nazwę projektu!");
