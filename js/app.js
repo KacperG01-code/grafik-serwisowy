@@ -127,27 +127,30 @@ function updateDashboard() {
 function renderCalendar(year, month) {
   calendarGrid.innerHTML = '';
 
+  // 1. Najpierw generujemy nagłówki dni tygodnia (żeby siatka zawsze miała 7 kolumn)
   const daysOfWeek = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'];
+  daysOfWeek.forEach(day => {
+    const header = document.createElement('div');
+    header.style.cssText = 'text-align: center; font-weight: bold; color: #888; padding: 6px 0; font-size: 12px;';
+    header.innerText = day;
+    calendarGrid.appendChild(header);
+  });
+
   const firstDayOfMonth = new Date(year, month, 1).getDay();
   const emptyDays = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  // Puste pola przed pierwszym dniem miesiąca
+  // 2. Puste pola przed pierwszym dniem miesiąca
   for (let i = 0; i < emptyDays; i++) {
     const emptyDiv = document.createElement('div');
     calendarGrid.appendChild(emptyDiv);
   }
 
+  // 3. Właściwe kafelki dni
   for (let i = 1; i <= daysInMonth; i++) {
     const dayDiv = document.createElement('div');
     dayDiv.classList.add('calendar-day');
-    dayDiv.style.cssText = 'background: #1e1e1e; min-height: 95px; padding: 4px; border-radius: 4px; border: 1px solid #333; display: flex; flex-direction: column; cursor: pointer; position: relative; overflow: hidden; gap: 3px;';
-
-    // Ustalamy nazwę dnia tygodnia dla danego dnia miesiąca
-    const currentDayDate = new Date(year, month, i);
-    let dayOfWeekIndex = currentDayDate.getDay(); // 0 to Niedziela, 1 to Poniedziałek...
-    dayOfWeekIndex = dayOfWeekIndex === 0 ? 6 : dayOfWeekIndex - 1; // Dopasowanie do tablicy od Pn
-    const dayName = daysOfWeek[dayOfWeekIndex];
+    dayDiv.style.cssText = 'background: #1e1e1e; min-height: 95px; padding: 6px; border-radius: 6px; border: 1px solid #333; display: flex; flex-direction: column; cursor: pointer; position: relative; overflow: hidden; gap: 4px; box-sizing: border-box;';
 
     // Znajdujemy dyżury dla tego dnia
     const dayShifts = allShifts.filter(shift => {
@@ -156,10 +159,9 @@ function renderCalendar(year, month) {
       return d.getFullYear() === year && d.getMonth() === month && d.getDate() === i;
     });
 
-    // Nagłówek kafelka: Nazwa dnia + Numer (np. Pn 3)
+    // Numer dnia w prawym górnym rogu kafelka
     let htmlContent = `
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-        <span style="font-size: 10px; color: #888; font-weight: bold; text-transform: uppercase;">${dayName}</span>
+      <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 2px;">
         <span style="font-weight: bold; color: #fff; font-size: 13px;">${i}</span>
       </div>
     `;
@@ -170,14 +172,14 @@ function renderCalendar(year, month) {
 
     dayDiv.innerHTML = htmlContent;
 
-    // Generowanie bloków dyżurów
+    // Generowanie bloków dyżurów wewnątrz kafelka
     dayShifts.forEach(shift => {
       const projectName = shift.project || 'Projekt';
       const startTime = shift.start ? shift.start.split('T')[1] : '';
       const endTime = shift.end ? shift.end.split('T')[1] : '';
 
       const shiftBlock = document.createElement('div');
-      shiftBlock.style.cssText = 'background: rgba(76, 175, 80, 0.15); border-left: 3px solid #4CAF50; padding: 3px; border-radius: 3px; font-size: 10px; position: relative;';
+      shiftBlock.style.cssText = 'background: rgba(76, 175, 80, 0.15); border-left: 3px solid #4CAF50; padding: 3px 4px; border-radius: 3px; font-size: 10px; position: relative;';
       
       shiftBlock.innerHTML = `
         <div style="color: #4CAF50; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 12px;">${projectName}</div>
@@ -196,7 +198,7 @@ function renderCalendar(year, month) {
       dayDiv.appendChild(shiftBlock);
     });
 
-    // Kliknięcie w dzień -> Dodawanie dyżuru
+    // Kliknięcie w dzień -> Otwiera okienko dodawania dyżuru
     dayDiv.addEventListener('click', () => {
       const strYear = year;
       const strMonth = String(month + 1).padStart(2, '0');
