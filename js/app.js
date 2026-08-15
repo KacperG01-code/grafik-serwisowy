@@ -201,20 +201,62 @@ function renderCalendar(year, month) {
       dayDiv.appendChild(shiftBlock);
     });
 
-    // Kliknięcie w dzień -> Otwiera okienko dodawania dyżuru
+   // KLIKNIĘCIE W KAFLUZEK DNIA -> Otwiera połączone okienko z aktualnymi zmianami i formularzem
     dayDiv.addEventListener('click', () => {
       const strYear = year;
       const strMonth = String(month + 1).padStart(2, '0');
       const strDay = String(i).padStart(2, '0');
-      
       selectedDateForShift = `${strYear}-${strMonth}-${strDay}`;
-      modalTitle.innerText = `Dodaj dyżur: ${i} ${monthNames[month]} ${year}`;
+
+      modalTitle.innerText = `Dzień: ${i} ${monthNames[month]} ${year}`;
+      
+      const dayShiftsContainer = document.getElementById('dayShiftsContainer');
+      dayShiftsContainer.innerHTML = '';
+
+      // Wyszukujemy aktualne dyżury dla tego konkretnego dnia
+      const currentDayShifts = allShifts.filter(shift => {
+        if (!shift.start) return false;
+        const d = new Date(shift.start);
+        return d.getFullYear() === year && d.getMonth() === month && d.getDate() === i;
+      });
+
+      if (currentDayShifts.length === 0) {
+        dayShiftsContainer.innerHTML = `<p style="color: #888; font-size: 13px; text-align: center; margin: 0;">Brak zaplanowanych zmian w tym dniu.</p>`;
+      } else {
+        currentDayShifts.forEach(shift => {
+          const projectName = shift.project || 'Projekt';
+          const startTime = shift.start ? shift.start.split('T')[1] : '';
+          const endTime = shift.end ? shift.end.split('T')[1] : '';
+          const totalPay = shift.calc && shift.calc.pay ? shift.calc.pay.total.toFixed(2) : '0.00';
+
+          const item = document.createElement('div');
+          item.style.cssText = 'background: #252525; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #4CAF50; display: flex; justify-content: space-between; align-items: center;';
+          item.innerHTML = `
+            <div>
+              <div style="color: #4CAF50; font-weight: bold; font-size: 13px;">${projectName}</div>
+              <div style="color: #ccc; font-size: 11px;">Godziny: ${startTime} - ${endTime} | Zarobek: ${totalPay} zł</div>
+            </div>
+            <button class="modal-del-btn" style="background: #d9534f; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">Usuń</button>
+          `;
+
+          // Przycisk usuwania konkretnej zmiany z poziomu okienka
+          item.querySelector('.modal-del-btn').addEventListener('click', () => {
+            if (confirm("Czy na pewno usunąć tę zmianę?")) {
+              deleteShift(shift.docId);
+              shiftModal.classList.add('hidden');
+            }
+          });
+
+          dayShiftsContainer.appendChild(item);
+        });
+      }
+
+      // Czyszczenie pól formularza dodawania i otwarcie okienka
+      document.getElementById('timeStart').value = '';
+      document.getElementById('timeEnd').value = '';
+      document.getElementById('isHoliday').checked = false;
       shiftModal.classList.remove('hidden');
     });
-
-    calendarGrid.appendChild(dayDiv);
-  }
-}
 
 /* =========================================================
    4. OBSŁUGA OKIENKA (MODALA) I ZAPIS DO FIREBASE
