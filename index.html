@@ -58,13 +58,23 @@
   </div>
 
   <!-- OKIENKO MODAL (Ukryte domyślnie) -->
+  <!-- OKIENKO MODAL (Połączone: Podgląd dnia + Formularz dodawania) -->
   <div id="shiftModal" class="modal-overlay hidden">
-    <div class="modal-content">
+    <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
       <div class="modal-header">
-        <h3 id="modalTitle">Dodaj dyżur</h3>
+        <h3 id="modalTitle">Szczegóły dnia</h3>
         <button id="closeModalBtn" class="btn-close">&times;</button>
       </div>
       <div class="modal-body">
+        
+        <!-- TUTAJ POJAWIĄ SIĘ AKTUALNE DYŻURY W TYM DNIU -->
+        <div id="dayShiftsContainer" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #444;">
+          <!-- Wstrzykiwane przez JS -->
+        </div>
+
+        <!-- FORMULARZ DODAWANIA NOWEGO DYŻURU -->
+        <h4 style="color: #007acc; margin-bottom: 10px; font-size: 15px;">Dodaj nową zmianę:</h4>
+
         <label>Projekt:</label>
         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
           <select id="projectSelect" style="flex: 1; padding: 10px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px;">
