@@ -128,18 +128,11 @@ function renderCalendar(year, month) {
   calendarGrid.innerHTML = '';
 
   const daysOfWeek = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'];
-  daysOfWeek.forEach(day => {
-    const header = document.createElement('div');
-    header.classList.add('calendar-day-header');
-    header.style.cssText = 'text-align: center; font-weight: bold; color: #888; padding: 5px 0;';
-    header.innerText = day;
-    calendarGrid.appendChild(header);
-  });
-
   const firstDayOfMonth = new Date(year, month, 1).getDay();
   const emptyDays = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+  // Puste pola przed pierwszym dniem miesiąca
   for (let i = 0; i < emptyDays; i++) {
     const emptyDiv = document.createElement('div');
     calendarGrid.appendChild(emptyDiv);
@@ -148,18 +141,28 @@ function renderCalendar(year, month) {
   for (let i = 1; i <= daysInMonth; i++) {
     const dayDiv = document.createElement('div');
     dayDiv.classList.add('calendar-day');
-    // Ustawiamy kafelki na wyższe i elastyczne
-    dayDiv.style.cssText = 'background: #1e1e1e; min-height: 100px; padding: 6px; border-radius: 6px; border: 1px solid #333; display: flex; flex-direction: column; cursor: pointer; position: relative; gap: 4px;';
+    dayDiv.style.cssText = 'background: #1e1e1e; min-height: 95px; padding: 4px; border-radius: 4px; border: 1px solid #333; display: flex; flex-direction: column; cursor: pointer; position: relative; overflow: hidden; gap: 3px;';
 
-    // Znajdujemy wszystkie dyżury dla tego dnia
+    // Ustalamy nazwę dnia tygodnia dla danego dnia miesiąca
+    const currentDayDate = new Date(year, month, i);
+    let dayOfWeekIndex = currentDayDate.getDay(); // 0 to Niedziela, 1 to Poniedziałek...
+    dayOfWeekIndex = dayOfWeekIndex === 0 ? 6 : dayOfWeekIndex - 1; // Dopasowanie do tablicy od Pn
+    const dayName = daysOfWeek[dayOfWeekIndex];
+
+    // Znajdujemy dyżury dla tego dnia
     const dayShifts = allShifts.filter(shift => {
       if (!shift.start) return false;
       const d = new Date(shift.start);
       return d.getFullYear() === year && d.getMonth() === month && d.getDate() === i;
     });
 
-    // Numer dnia (prawa góra)
-    let htmlContent = `<div style="font-weight: bold; color: #fff; font-size: 14px; text-align: right; margin-bottom: 2px;">${i}</div>`;
+    // Nagłówek kafelka: Nazwa dnia + Numer (np. Pn 3)
+    let htmlContent = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+        <span style="font-size: 10px; color: #888; font-weight: bold; text-transform: uppercase;">${dayName}</span>
+        <span style="font-weight: bold; color: #fff; font-size: 13px;">${i}</span>
+      </div>
+    `;
     
     if (dayShifts.length > 0) {
       dayDiv.style.borderColor = '#4CAF50';
@@ -167,25 +170,24 @@ function renderCalendar(year, month) {
 
     dayDiv.innerHTML = htmlContent;
 
-    // Generujemy blok dla każdego dyżuru w tym dniu
+    // Generowanie bloków dyżurów
     dayShifts.forEach(shift => {
       const projectName = shift.project || 'Projekt';
       const startTime = shift.start ? shift.start.split('T')[1] : '';
       const endTime = shift.end ? shift.end.split('T')[1] : '';
 
       const shiftBlock = document.createElement('div');
-      shiftBlock.style.cssText = 'background: rgba(76, 175, 80, 0.15); border-left: 3px solid #4CAF50; padding: 4px; border-radius: 4px; font-size: 11px; position: relative;';
+      shiftBlock.style.cssText = 'background: rgba(76, 175, 80, 0.15); border-left: 3px solid #4CAF50; padding: 3px; border-radius: 3px; font-size: 10px; position: relative;';
       
       shiftBlock.innerHTML = `
-        <div style="color: #4CAF50; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 15px;">${projectName}</div>
-        <div style="color: #ccc; margin-top: 2px;">${startTime} - ${endTime}</div>
-        <button class="delete-btn" style="position: absolute; top: 2px; right: 2px; background: none; border: none; color: #d9534f; font-size: 14px; cursor: pointer; padding: 0 3px;">&times;</button>
+        <div style="color: #4CAF50; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 12px;">${projectName}</div>
+        <div style="color: #ccc; margin-top: 1px;">${startTime}-${endTime}</div>
+        <button class="delete-btn" style="position: absolute; top: 1px; right: 1px; background: none; border: none; color: #d9534f; font-size: 12px; cursor: pointer; padding: 0 2px;">&times;</button>
       `;
 
-      // Event usuwania podpięty tylko pod 'X' na kafelku
       const deleteBtn = shiftBlock.querySelector('.delete-btn');
       deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Zatrzymuje kliknięcie przed otwarciem okna dodawania dyżuru
+        e.stopPropagation();
         if(confirm("Czy na pewno usunąć ten dyżur?")) {
           deleteShift(shift.docId);
         }
@@ -194,7 +196,7 @@ function renderCalendar(year, month) {
       dayDiv.appendChild(shiftBlock);
     });
 
-    // KLIKNIĘCIE W DZIEŃ -> Otwiera okienko dodawania
+    // Kliknięcie w dzień -> Dodawanie dyżuru
     dayDiv.addEventListener('click', () => {
       const strYear = year;
       const strMonth = String(month + 1).padStart(2, '0');
