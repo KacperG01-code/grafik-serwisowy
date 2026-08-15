@@ -18,6 +18,7 @@
       <p id="loginError" style="color: #d9534f; margin-top: 15px; font-size: 14px; display: none;">Błędny e-mail lub hasło!</p>
     </div>
   </div>
+
   <!-- Pasek górny -->
   <header class="top-bar">
     <h1>Mój Grafik</h1>
@@ -49,9 +50,9 @@
         <button id="nextMonthBtn" class="btn-icon">&gt;</button>
       </div>
 
-      <!-- Siatka kalendarza (Dni wygeneruje JS) -->
+      <!-- Siatka kalendarza -->
       <div id="calendarGrid" class="calendar-grid">
-        <!-- Tutaj wpadną nagłówki (Pn, Wt...) i kafelki z dniami -->
+        <!-- Tutaj wpadną nagłówki i kafelki z dniami -->
       </div>
     </div>
 
@@ -59,7 +60,6 @@
     <div class="shifts-section">
       <h2>Dyżury: <span id="selectedMonthText">Sierpień 2026</span></h2>
       <div id="shiftsList" class="schedule-container">
-        <!-- Tutaj JavaScript będzie generował kafelki dla wybranego miesiąca -->
         <p class="empty-state">Brak dyżurów w tym miesiącu.</p>
       </div>
     </div>
@@ -70,44 +70,58 @@
   <div id="shiftModal" class="modal-overlay hidden">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="modalTitle">Dodaj dyżur: 15 Sierpnia</h3>
+        <h3 id="modalTitle">Dodaj dyżur</h3>
         <button id="closeModalBtn" class="btn-close">&times;</button>
       </div>
       <div class="modal-body">
         <label>Projekt:</label>
         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
           <select id="projectSelect" style="flex: 1; padding: 10px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px;">
-    <!-- Opcje będą się tu ładować z bazy -->
-            <option value="COOL TECHNIK (Stawki Zmienne)">COOL TECHNIK (Stawki Zmienne)</option>
+            <option value="COOL TECHNIK">COOL TECHNIK</option>
           </select>
           <button id="showAddProjectBtn" type="button" style="padding: 10px 15px; background: #444; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">+</button>
         </div>
 
-<!-- Ukryte pole do dodawania nowego projektu -->
         <!-- Ukryte pole do dodawania nowego projektu wraz ze stawkami -->
-  <div id="newProjectContainer" style="display: none; flex-direction: column; gap: 8px; margin-bottom: 15px; background: #252525; padding: 10px; border-radius: 6px;">
-    <input type="text" id="newProjectName" placeholder="Nazwa projektu (np. Nowy Serwis)" style="padding: 8px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px;">
-  
-    <div style="display: flex; gap: 5px;">
-      <input type="number" id="newProjectBase" placeholder="Stawka bazowa (zł/h)" style="flex: 1; padding: 8px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px;" step="0.01">
-      <input type="number" id="newProjectNight" placeholder="Stawka nocna (zł/h)" style="flex: 1; padding: 8px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px;" step="0.01">
-      <input type="number" id="newProjectHoliday" placeholder="Stawka święto (zł/h)" style="flex: 1; padding: 8px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px;" step="0.01">
+        <div id="newProjectContainer" style="display: none; flex-direction: column; gap: 8px; margin-bottom: 15px; background: #252525; padding: 10px; border-radius: 6px;">
+          <input type="text" id="newProjectName" placeholder="Nazwa projektu (np. Nowy Serwis)" style="padding: 8px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px;">
+          
+          <div style="display: flex; gap: 5px;">
+            <input type="number" id="newProjectBase" placeholder="Stawka bazowa (zł/h)" style="flex: 1; padding: 8px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px;" step="0.01">
+            <input type="number" id="newProjectNight" placeholder="Stawka nocna (zł/h)" style="flex: 1; padding: 8px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px;" step="0.01">
+            <input type="number" id="newProjectHoliday" placeholder="Stawka święto (zł/h)" style="flex: 1; padding: 8px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px;" step="0.01">
+          </div>
+
+          <button id="saveProjectBtn" type="button" style="padding: 8px; background: #5cb85c; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px;">Zapisz nowy projekt</button>
+        </div>
+
+        <label>Rozpoczęcie:</label>
+        <input type="time" id="timeStart" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;">
+        
+        <label>Zakończenie:</label>
+        <input type="time" id="timeEnd" style="width: 100%; padding: 10px; margin-bottom: 15px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;">
+
+        <div class="checkbox-container" style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+          <input type="checkbox" id="isHoliday" style="width: 18px; height: 18px;"> 
+          <label for="isHoliday" style="cursor: pointer;">Zaznacz, jeśli to Święto</label>
+        </div>
+
+        <button id="saveShiftBtn" class="btn btn-blue w-100" style="width: 100%; padding: 12px; background: #007acc; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px;">Zapisz godziny</button>
+      </div>
     </div>
+  </div>
 
-  <button id="saveProjectBtn" type="button" style="padding: 8px; background: #5cb85c; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px;">Zapisz nowy projekt</button>
-</div>
+  <!-- Biblioteki Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
- <!-- Biblioteki Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- Konfiguracja Firebase -->
+  <script src="js/firebase.js"></script>
 
-<!-- Twój plik z konfiguracją Firebase -->
-<script src="js/firebase.js"></script>
-
-<!-- Twoje pozostałe skrypty -->
-<script src="js/calculator.js"></script>
-<script src="js/excel-gen.js"></script>
-<script src="js/app.js"></script>
+  <!-- Pozostałe skrypty -->
+  <script src="js/calculator.js"></script>
+  <script src="js/excel-gen.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
