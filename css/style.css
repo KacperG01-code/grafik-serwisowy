@@ -88,17 +88,21 @@ input, select {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  padding: 20px;
+  padding: 10px; /* mniejszy padding na telefonie */
   max-width: 1200px;
   margin: 0 auto;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .calendar-section {
   flex: 2;
-  min-width: 300px;
+  min-width: 0; /* Kluczowe, żeby grid nie rozpychał kontenera na szerokość */
   background-color: #222;
-  padding: 20px;
+  padding: 10px; /* symetryczny, mniejszy padding żeby nic nie ucinało */
   border-radius: 8px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .shifts-section {
