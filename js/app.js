@@ -126,8 +126,11 @@ function updateDashboard() {
 ========================================================= */
 function renderCalendar(year, month) {
   calendarGrid.innerHTML = '';
+  
+  // Wymuszamy 7 kolumn bezpośrednio z poziomu JS, żeby CSS nie mógł tego zignorować
+  calendarGrid.style.cssText = 'display: grid !important; grid-template-columns: repeat(7, 1fr) !important; gap: 6px !important; width: 100% !important; box-sizing: border-box !important;';
 
-  // 1. Najpierw generujemy nagłówki dni tygodnia (żeby siatka zawsze miała 7 kolumn)
+  // 1. Najpierw generujemy nagłówki dni tygodnia
   const daysOfWeek = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd'];
   daysOfWeek.forEach(day => {
     const header = document.createElement('div');
