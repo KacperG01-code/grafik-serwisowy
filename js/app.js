@@ -201,7 +201,7 @@ function renderCalendar(year, month) {
       dayDiv.appendChild(shiftBlock);
     });
 
-   // KLIKNIĘCIE W KAFLUZEK DNIA -> Otwiera połączone okienko z aktualnymi zmianami i formularzem
+    // KLIKNIĘCIE W KAFLUSEK DNIA -> Otwiera połączone okienko z aktualnymi zmianami i formularzem
     dayDiv.addEventListener('click', () => {
       const strYear = year;
       const strMonth = String(month + 1).padStart(2, '0');
@@ -257,6 +257,10 @@ function renderCalendar(year, month) {
       document.getElementById('isHoliday').checked = false;
       shiftModal.classList.remove('hidden');
     });
+
+    calendarGrid.appendChild(dayDiv);
+  }
+}
 
 /* =========================================================
    4. OBSŁUGA OKIENKA (MODALA) I ZAPIS DO FIREBASE
