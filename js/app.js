@@ -340,10 +340,20 @@ const saveProjectBtn = document.getElementById('saveProjectBtn');
 const projectSelect = document.getElementById('projectSelect'); // Upewnij się, że masz takie ID w HTML
 
 // Pobieranie i aktualizowanie listy projektów z bazy
+const projectSelect = document.getElementById('projectSelect');
+
+// Globalna tablica do trzymania pobranych projektów ze stawkami
+let availableProjects = [];
+
 db.collection('projects').onSnapshot(snapshot => {
-  projectSelect.innerHTML = ''; // Czyścimy listę
+  projectSelect.innerHTML = '';
+  availableProjects = [];
+  
   snapshot.forEach(doc => {
     const proj = doc.data();
+    proj.id = doc.id;
+    availableProjects.push(proj);
+
     const option = document.createElement('option');
     option.value = proj.name;
     option.innerText = proj.name;
