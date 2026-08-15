@@ -210,7 +210,7 @@ shiftModal.addEventListener('click', (e) => {
 
 // ZAPISYWANIE DYŻURU
 saveShiftBtn.addEventListener('click', () => {
-  const proj = document.getElementById('projectSelect').value;
+  const selectedProjectName = projectSelect.value;
   const timeStart = document.getElementById('timeStart').value;
   const timeEnd = document.getElementById('timeEnd').value;
   const isHoliday = document.getElementById('isHoliday').checked;
@@ -218,6 +218,51 @@ saveShiftBtn.addEventListener('click', () => {
   if (!timeStart || !timeEnd) {
     alert("Wprowadź godziny rozpoczęcia i zakończenia!");
     return;
+  }
+
+  // Szukamy konfiguracji wybranego projektu w naszych pobranym danych
+  const projectConfig = availableProjects.find(p => p.name === selectedProjectName) || {
+    baseRate: 31.40,
+    nightRate: 35.00,
+    holidayRate: 45.00
+  };
+
+  // Sklejamy datę z godziną
+  const fullStart = `${selectedDateForShift}T${timeStart}`;
+  let fullEnd = `${selectedDateForShift}T${timeEnd}`;
+
+  if (timeEnd < timeStart) {
+    let nextDay = new Date(selectedDateForShift);
+    nextDay.setDate(nextDay.getDate() + 1);
+    const nextStrYear = nextDay.getFullYear();
+    const nextStrMonth = String(nextDay.getMonth() + 1).padStart(2, '0');
+    const nextStrDay = String(nextDay.getDate()).padStart(2, '0');
+    fullEnd = `${nextStrYear}-${nextStrMonth}-${nextStrDay}T${timeEnd}`;
+  }
+
+  // Przeliczanie zarobków z użyciem naszego nowego kalkulatora i konfiguracji projektu!
+  const calcResults = calculateShiftEarnings(fullStart, fullEnd, isHoliday, projectConfig);
+
+  const newShift = {
+    project: selectedProjectName,
+    start: fullStart,
+    end: fullEnd,
+    isHoliday: isHoliday,
+    calc: calcResults
+  };
+
+  // Wysyłka do Firebase
+  db.collection('shifts').add(newShift).then(() => {
+    document.getElementById('timeStart').value = '';
+    document.getElementById('timeEnd').value = '';
+    document.getElementById('isHoliday').checked = false;
+    shiftModal.classList.add('hidden');
+    console.log("Dyżur zapisany pomyślnie!");
+  }).catch(error => {
+    console.error("Błąd zapisu dyżuru:", error);
+    alert("Błąd połączenia z bazą!");
+  });
+});
   }
 
   // Sklejamy datę (YYYY-MM-DD) z godziną (HH:mm) do formatu ISO (YYYY-MM-DDTHH:mm)
