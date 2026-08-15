@@ -26,41 +26,32 @@
     <button id="logoutBtn" class="logout-btn">Wyloguj się</button>
   </header>
 
-  <!-- Główny kontener aplikacji -->
-  <div class="dashboard-container">
+  <!-- Główny kontener aplikacji (Teraz tylko pełny kalendarz i podsumowanie) -->
+  <div class="dashboard-container" style="display: flex; flex-direction: column; max-width: 900px; margin: 0 auto; padding: 15px;">
     
-    <!-- LEWA KOLUMNA: Kalendarz i Podsumowanie -->
-    <div class="calendar-section">
+    <div class="calendar-section" style="width: 100%;">
       <!-- Podsumowanie finansowe -->
-      <div class="summary-panel">
-        <div class="summary-box">
-          <p>Zarobki w miesiącu</p>
-          <h2 id="monthEarnings">0.00 zł</h2>
+      <div class="summary-panel" style="display: flex; gap: 15px; margin-bottom: 20px;">
+        <div class="summary-box" style="flex: 1; background: #1e1e1e; padding: 15px; border-radius: 8px; text-align: center;">
+          <p style="color: #aaa; margin: 0 0 5px 0;">Zarobki w miesiącu</p>
+          <h2 id="monthEarnings" style="color: #4CAF50; margin: 0;">0.00 zł</h2>
         </div>
-        <div class="summary-box">
-          <p>Godziny (Razem)</p>
-          <h2 id="monthHours">0 h</h2>
+        <div class="summary-box" style="flex: 1; background: #1e1e1e; padding: 15px; border-radius: 8px; text-align: center;">
+          <p style="color: #aaa; margin: 0 0 5px 0;">Godziny (Razem)</p>
+          <h2 id="monthHours" style="color: #007acc; margin: 0;">0 h</h2>
         </div>
       </div>
 
       <!-- Nawigacja kalendarza -->
-      <div class="calendar-header">
-        <button id="prevMonthBtn" class="btn-icon">&lt;</button>
-        <h2 id="currentMonthLabel">Sierpień 2026</h2>
-        <button id="nextMonthBtn" class="btn-icon">&gt;</button>
+      <div class="calendar-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <button id="prevMonthBtn" class="btn-icon" style="padding: 10px 15px; background: #2d2d2d; color: white; border: none; border-radius: 4px; cursor: pointer;">&lt;</button>
+        <h2 id="currentMonthLabel" style="margin: 0; color: #fff;">Sierpień 2026</h2>
+        <button id="nextMonthBtn" class="btn-icon" style="padding: 10px 15px; background: #2d2d2d; color: white; border: none; border-radius: 4px; cursor: pointer;">&gt;</button>
       </div>
 
       <!-- Siatka kalendarza -->
       <div id="calendarGrid" class="calendar-grid">
         <!-- Tutaj wpadną nagłówki i kafelki z dniami -->
-      </div>
-    </div>
-
-    <!-- PRAWA KOLUMNA: Kafelki z dyżurami -->
-    <div class="shifts-section">
-      <h2>Dyżury: <span id="selectedMonthText">Sierpień 2026</span></h2>
-      <div id="shiftsList" class="schedule-container">
-        <p class="empty-state">Brak dyżurów w tym miesiącu.</p>
       </div>
     </div>
 
