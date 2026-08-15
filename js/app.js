@@ -9,6 +9,7 @@ if ('serviceWorker' in navigator) {
 let allShifts = []; 
 let currentDate = new Date(); 
 let selectedDateForShift = null; // Zmienna zapamiętująca kliknięty dzień
+let availableProjects = []; // Tablica na projekty pobrane z bazy
 
 // Elementy interfejsu (Dashboard)
 const calendarGrid = document.getElementById('calendarGrid');
@@ -25,6 +26,7 @@ const shiftModal = document.getElementById('shiftModal');
 const closeModalBtn = document.getElementById('closeModalBtn');
 const modalTitle = document.getElementById('modalTitle');
 const saveShiftBtn = document.getElementById('saveShiftBtn');
+const projectSelect = document.getElementById('projectSelect');
 
 const monthNames = [
   "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", 
@@ -41,7 +43,6 @@ const loginBtn = document.getElementById('loginBtn');
 const loginError = document.getElementById('loginError');
 
 // Nasłuchiwanie na przycisk logowania
-
 loginBtn.addEventListener('click', () => {
   const email = loginEmail.value;
   const pass = loginPassword.value;
@@ -53,13 +54,11 @@ loginBtn.addEventListener('click', () => {
   
   firebase.auth().signInWithEmailAndPassword(email, pass)
     .then((userCredential) => {
-      // Sukces - ukrywamy błąd (okienko schowa się samo w onAuthStateChanged)
-      alert("Zalogowano pomyslnie!");
+      alert("Zalogowano pomyślnie!");
       loginError.style.display = 'none';
-      loginPassword.value = ''; // Czyścimy hasło dla bezpieczeństwa
+      loginPassword.value = '';
     })
     .catch((error) => {
-      // Błąd logowania (np. złe hasło)
       alert("BŁĄD FIREBASE: " + error.code + " - " + error.message);
       loginError.style.display = 'block';
       console.error("Błąd logowania:", error.message);
@@ -68,15 +67,8 @@ loginBtn.addEventListener('click', () => {
 
 // Nasłuchiwanie na przycisk wylogowania
 const logoutBtn = document.getElementById('logoutBtn');
-
-// Ten log odpali się od razu po załadowaniu strony
-console.log("Czy JS widzi przycisk wylogowania?:", logoutBtn); 
-
 if (logoutBtn) {
   logoutBtn.addEventListener('click', () => {
-    // Ten log odpali się TYLKO po kliknięciu
-    console.log("Kliknięto przycisk wylogowania!"); 
-    
     firebase.auth().signOut().then(() => {
       console.log("Wylogowano pomyślnie w Firebase!");
     }).catch((error) => {
@@ -88,10 +80,9 @@ if (logoutBtn) {
 // Nasłuchiwanie na ZMIANĘ STANU LOGOWANIA (Główny strażnik)
 firebase.auth().onAuthStateChanged((user) => {
   if (user) {
-    // 🟢 UŻYTKOWNIK ZALOGOWANY
-    loginOverlay.style.display = 'none'; // Chowamy czarną planszę
+    loginOverlay.style.display = 'none';
     
-    // Dopiero teraz, gdy jesteśmy zalogowani, Firebase pozwoli nam pobrać dane
+    // Pobieranie dyżurów
     db.collection('shifts').orderBy('start', 'desc').onSnapshot((snapshot) => {
       allShifts = [];
       snapshot.forEach(doc => {
@@ -99,16 +90,15 @@ firebase.auth().onAuthStateChanged((user) => {
         shift.docId = doc.id; 
         allShifts.push(shift);
       });
-      updateDashboard(); // Odświeżamy widok po pobraniu
+      updateDashboard();
     }, (error) => {
-      console.error("Odmowa dostępu do pobrania danych (złe reguły?):", error);
+      console.error("Odmowa dostępu do pobrania danych:", error);
     });
     
   } else {
-    // 🔴 UŻYTKOWNIK WYLOGOWANY (lub włączył apkę po raz pierwszy)
-    loginOverlay.style.display = 'flex'; // Pokazujemy czarną planszę
-    allShifts = []; // Czyścimy lokalne dane dla bezpieczeństwa
-    updateDashboard(); // Czyścimy ekran w tle
+    loginOverlay.style.display = 'flex';
+    allShifts = [];
+    updateDashboard();
   }
 });
 
@@ -173,19 +163,13 @@ function renderCalendar(year, month) {
       dayDiv.style.borderLeft = '3px solid #4CAF50';
     }
 
-    // KLIKNIĘCIE W DZIEŃ -> Otwiera okienko
     dayDiv.addEventListener('click', () => {
-      // Zapamiętujemy datę w formacie YYYY-MM-DD
       const strYear = year;
       const strMonth = String(month + 1).padStart(2, '0');
       const strDay = String(i).padStart(2, '0');
       
       selectedDateForShift = `${strYear}-${strMonth}-${strDay}`;
-      
-      // Zmieniamy tytuł okienka
       modalTitle.innerText = `Dodaj dyżur: ${i} ${monthNames[month]} ${year}`;
-      
-      // Pokazujemy okienko
       shiftModal.classList.remove('hidden');
     });
 
@@ -196,12 +180,10 @@ function renderCalendar(year, month) {
 /* =========================================================
    4. OBSŁUGA OKIENKA (MODALA) I ZAPIS DO FIREBASE
 ========================================================= */
-// Zamknięcie okienka (Krzyżyk)
 closeModalBtn.addEventListener('click', () => {
   shiftModal.classList.add('hidden');
 });
 
-// Kliknięcie w szare tło zamyka okienko
 shiftModal.addEventListener('click', (e) => {
   if (e.target === shiftModal) {
     shiftModal.classList.add('hidden');
@@ -220,14 +202,13 @@ saveShiftBtn.addEventListener('click', () => {
     return;
   }
 
-  // Szukamy konfiguracji wybranego projektu w naszych pobranym danych
+  // Szukamy stawek wybranego projektu w pobranych z bazy
   const projectConfig = availableProjects.find(p => p.name === selectedProjectName) || {
     baseRate: 31.40,
     nightRate: 35.00,
     holidayRate: 45.00
   };
 
-  // Sklejamy datę z godziną
   const fullStart = `${selectedDateForShift}T${timeStart}`;
   let fullEnd = `${selectedDateForShift}T${timeEnd}`;
 
@@ -240,7 +221,7 @@ saveShiftBtn.addEventListener('click', () => {
     fullEnd = `${nextStrYear}-${nextStrMonth}-${nextStrDay}T${timeEnd}`;
   }
 
-  // Przeliczanie zarobków z użyciem naszego nowego kalkulatora i konfiguracji projektu!
+  // Przeliczanie zarobków z nowym kalkulatorem
   const calcResults = calculateShiftEarnings(fullStart, fullEnd, isHoliday, projectConfig);
 
   const newShift = {
@@ -251,49 +232,7 @@ saveShiftBtn.addEventListener('click', () => {
     calc: calcResults
   };
 
-  // Wysyłka do Firebase
   db.collection('shifts').add(newShift).then(() => {
-    document.getElementById('timeStart').value = '';
-    document.getElementById('timeEnd').value = '';
-    document.getElementById('isHoliday').checked = false;
-    shiftModal.classList.add('hidden');
-    console.log("Dyżur zapisany pomyślnie!");
-  }).catch(error => {
-    console.error("Błąd zapisu dyżuru:", error);
-    alert("Błąd połączenia z bazą!");
-  });
-});
-  }
-
-  // Sklejamy datę (YYYY-MM-DD) z godziną (HH:mm) do formatu ISO (YYYY-MM-DDTHH:mm)
-  const fullStart = `${selectedDateForShift}T${timeStart}`;
-  let fullEnd = `${selectedDateForShift}T${timeEnd}`;
-
-  // Proste zabezpieczenie, jeśli dyżur kończy się po północy (godzina zakończenia jest mniejsza niż rozpoczęcia)
-  if (timeEnd < timeStart) {
-    let nextDay = new Date(selectedDateForShift);
-    nextDay.setDate(nextDay.getDate() + 1);
-    const nextStrYear = nextDay.getFullYear();
-    const nextStrMonth = String(nextDay.getMonth() + 1).padStart(2, '0');
-    const nextStrDay = String(nextDay.getDate()).padStart(2, '0');
-    fullEnd = `${nextStrYear}-${nextStrMonth}-${nextStrDay}T${timeEnd}`;
-  }
-
-  // Przeliczanie zarobków
-  const calcResults = calculateShiftEarnings(fullStart, fullEnd, isHoliday, proj);
-
-  const newShift = {
-    id: Date.now(),
-    project: proj,
-    start: fullStart,
-    end: fullEnd,
-    isHoliday: isHoliday,
-    calc: calcResults
-  };
-
-  // Wysyłka do Firebase
-  db.collection('shifts').add(newShift).then(() => {
-    // Sukces! Czyścimy formularz i zamykamy okienko
     document.getElementById('timeStart').value = '';
     document.getElementById('timeEnd').value = '';
     document.getElementById('isHoliday').checked = false;
@@ -305,7 +244,7 @@ saveShiftBtn.addEventListener('click', () => {
 });
 
 /* =========================================================
-   5. RESZTA FUNKCJI (LISTA, NAWIGACJA, EXPORT, USUWANIE)
+   5. LISTA, PODSUMOWANIE I ZARZĄDZANIE PROJEKTAMI
 ========================================================= */
 function renderShiftsList(shifts) {
   shiftsList.innerHTML = '';
@@ -319,7 +258,7 @@ function renderShiftsList(shifts) {
     const card = document.createElement('div');
     card.style.cssText = 'background: #1e1e1e; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #007acc; position: relative;';
     
-    const projectName = shift.project === 'backoffice' ? 'BackOffice' : 'COOL TECHNIK';
+    const projectName = shift.project || 'Projekt';
     const totalHours = shift.calc && shift.calc.hours ? shift.calc.hours.total : 0;
     const totalPay = shift.calc && shift.calc.pay ? shift.calc.pay.total : 0;
     const startDate = shift.start ? shift.start.replace('T', ' ') : '';
@@ -377,19 +316,12 @@ window.deleteShift = function(docId) {
   });
 };
 
-// POPRAWIONA SEKCJA PROJEKTÓW
+// --- OBSŁUGA PROJEKTÓW I BAZY ---
 const showAddProjectBtn = document.getElementById('showAddProjectBtn');
 const newProjectContainer = document.getElementById('newProjectContainer');
-const newProjectInput = document.getElementById('newProjectInput');
 const saveProjectBtn = document.getElementById('saveProjectBtn');
-const projectSelect = document.getElementById('projectSelect'); // Upewnij się, że masz takie ID w HTML
 
-// Pobieranie i aktualizowanie listy projektów z bazy
-const projectSelect = document.getElementById('projectSelect');
-
-// Globalna tablica do trzymania pobranych projektów ze stawkami
-let availableProjects = [];
-
+// Pobieranie projektów z bazy do listy rozwijanej
 db.collection('projects').onSnapshot(snapshot => {
   projectSelect.innerHTML = '';
   availableProjects = [];
@@ -406,37 +338,42 @@ db.collection('projects').onSnapshot(snapshot => {
   });
 });
 
-showAddProjectBtn.addEventListener('click', () => {
-  newProjectContainer.style.display = (newProjectContainer.style.display === 'none') ? 'flex' : 'none';
-});
+if (showAddProjectBtn && newProjectContainer) {
+  showAddProjectBtn.addEventListener('click', () => {
+    newProjectContainer.style.display = (newProjectContainer.style.display === 'none' || newProjectContainer.style.display === '') ? 'flex' : 'none';
+  });
+}
 
-saveProjectBtn.addEventListener('click', () => {
-  const projectName = document.getElementById('newProjectName').value.trim();
-  const baseRate = parseFloat(document.getElementById('newProjectBase').value) || 31.40;
-  const nightRate = parseFloat(document.getElementById('newProjectNight').value) || 35.00;
-  const holidayRate = parseFloat(document.getElementById('newProjectHoliday').value) || 45.00;
+if (saveProjectBtn) {
+  saveProjectBtn.addEventListener('click', () => {
+    const projectName = document.getElementById('newProjectName').value.trim();
+    const baseRate = parseFloat(document.getElementById('newProjectBase').value) || 31.40;
+    const nightRate = parseFloat(document.getElementById('newProjectNight').value) || 35.00;
+    const holidayRate = parseFloat(document.getElementById('newProjectHoliday').value) || 45.00;
 
-  if (!projectName) {
-    alert("Wpisz nazwę projektu!");
-    return;
-  }
+    if (!projectName) {
+      alert("Wpisz nazwę projektu!");
+      return;
+    }
 
-  db.collection('projects').add({
-    name: projectName,
-    baseRate: baseRate,
-    nightRate: nightRate,
-    holidayRate: holidayRate,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
-    document.getElementById('newProjectName').value = '';
-    document.getElementById('newProjectBase').value = '';
-    document.getElementById('newProjectNight').value = '';
-    document.getElementById('newProjectHoliday').value = '';
-    newProjectContainer.style.display = 'none';
-    console.log("Nowy projekt ze stawkami dodany!");
-  }).catch(err => console.error("Błąd zapisu projektu:", err));
-});
+    db.collection('projects').add({
+      name: projectName,
+      baseRate: baseRate,
+      nightRate: nightRate,
+      holidayRate: holidayRate,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      document.getElementById('newProjectName').value = '';
+      document.getElementById('newProjectBase').value = '';
+      document.getElementById('newProjectNight').value = '';
+      document.getElementById('newProjectHoliday').value = '';
+      newProjectContainer.style.display = 'none';
+      console.log("Nowy projekt dodany!");
+    }).catch(err => console.error("Błąd zapisu projektu:", err));
+  });
+}
 
+// Eksport do Excela
 const exportBtn = document.getElementById('exportExcelBtn');
 if (exportBtn) {
   exportBtn.addEventListener('click', () => {
@@ -455,5 +392,3 @@ if (exportBtn) {
     generateExcel(filteredShifts);
   });
 }
-
-
