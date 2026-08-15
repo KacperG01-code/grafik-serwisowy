@@ -356,7 +356,11 @@ showAddProjectBtn.addEventListener('click', () => {
 });
 
 saveProjectBtn.addEventListener('click', () => {
-  const projectName = newProjectInput.value.trim();
+  const projectName = document.getElementById('newProjectName').value.trim();
+  const baseRate = parseFloat(document.getElementById('newProjectBase').value) || 31.40;
+  const nightRate = parseFloat(document.getElementById('newProjectNight').value) || 35.00;
+  const holidayRate = parseFloat(document.getElementById('newProjectHoliday').value) || 45.00;
+
   if (!projectName) {
     alert("Wpisz nazwę projektu!");
     return;
@@ -364,13 +368,18 @@ saveProjectBtn.addEventListener('click', () => {
 
   db.collection('projects').add({
     name: projectName,
-    baseRate: 30, // Domyślna stawka, później zrobimy edycję
-    holidayRate: 60,
+    baseRate: baseRate,
+    nightRate: nightRate,
+    holidayRate: holidayRate,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
-    newProjectInput.value = '';
+    document.getElementById('newProjectName').value = '';
+    document.getElementById('newProjectBase').value = '';
+    document.getElementById('newProjectNight').value = '';
+    document.getElementById('newProjectHoliday').value = '';
     newProjectContainer.style.display = 'none';
-  }).catch(err => console.error("Błąd zapisu:", err));
+    console.log("Nowy projekt ze stawkami dodany!");
+  }).catch(err => console.error("Błąd zapisu projektu:", err));
 });
 
 const exportBtn = document.getElementById('exportExcelBtn');
